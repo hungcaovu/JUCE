@@ -1049,7 +1049,11 @@ public:
     }
 
     //==============================================================================
-    void scanForDevices() override {}
+    void scanForDevices() override {
+        inputDevices.clear();
+        outputDevices.clear();
+        checkAvailableDevices();
+    }
 
     StringArray getDeviceNames (bool wantInputNames) const override
     {
