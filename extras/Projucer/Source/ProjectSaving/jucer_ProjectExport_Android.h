@@ -402,7 +402,7 @@ private:
             mo << "# Automatically generated CMakeLists, created by the Projucer" << newLine
                << "# Don't edit this file! Your changes will be overwritten when you re-save the Projucer project!" << newLine
                << newLine
-               << "cmake_minimum_required(VERSION 3.22)" << newLine
+               << "cmake_minimum_required(VERSION 3.18.1)" << newLine
                << newLine
                << "project(juce_jni_project)" << newLine
                << newLine;
