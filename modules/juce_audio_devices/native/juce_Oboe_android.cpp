@@ -940,6 +940,10 @@ private:
 
             if (error == oboe::Result::ErrorDisconnected)
             {
+                if(owner.callback.get()){
+                    owner.callback.get()->audioDeviceError("Audio device is disconnected");
+                }
+                return;
                 const SpinLock::ScopedTryLockType streamRestartLock { streamRestartMutex };
 
                 if (streamRestartLock.isLocked())
@@ -950,6 +954,7 @@ private:
                     const SpinLock::ScopedLockType audioCallbackLock { audioCallbackMutex };
 
                     outputStream = nullptr;
+
                     outputStream.reset (new OboeStream (oboe::kUnspecified,
                                                         oboe::Direction::Output,
                                                         oboe::SharingMode::Exclusive,
