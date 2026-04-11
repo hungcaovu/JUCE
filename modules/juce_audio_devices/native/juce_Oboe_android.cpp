@@ -975,8 +975,9 @@ private:
             if (error != oboe::Result::ErrorDisconnected)
                 return;
 
-            openStreams();
-            start();
+            // NgheRo: fire error callback instead of auto-restarting stream
+            if (owner.callback.get())
+                owner.callback.get()->audioDeviceError ("Audio device is disconnected");
         }
 
         void destroyStreams()
@@ -1032,18 +1033,20 @@ OboeAudioIODevice::OboeSessionBase* OboeAudioIODevice::OboeSessionBase::create (
                                                                                 int bufferSize)
 {
 
-    // SDK versions 21 and higher should natively support floating point...
-    std::unique_ptr<OboeSessionBase> session = std::make_unique<OboeSessionImpl<float>> (owner,
-                                                                                         inputDeviceId,
-                                                                                         outputDeviceId,
-                                                                                         numInputChannels,
-                                                                                         numOutputChannels,
-                                                                                         sampleRate,
-                                                                                         bufferSize);
+    std::unique_ptr<OboeSessionBase> session;
+    auto sdkVersion = getAndroidSDKVersion();
 
-    // ...however, some devices lie so re-try without floating point
-    if (session != nullptr && (! session->openedOk()))
-        session.reset();
+    // SDK versions 21 and higher should natively support floating point...
+    // NgheRo: skip float session on SDK < 21 to avoid crash
+    if (sdkVersion >= 21)
+    {
+        session.reset (new OboeSessionImpl<float> (owner, inputDeviceId, outputDeviceId,
+                                                   numInputChannels, numOutputChannels, sampleRate, bufferSize));
+
+        // ...however, some devices lie so re-try without floating point
+        if (session != nullptr && (! session->openedOk()))
+            session.reset();
+    }
 
     if (session == nullptr)
     {
@@ -1069,7 +1072,13 @@ public:
     }
 
     //==============================================================================
-    void scanForDevices() override {}
+    void scanForDevices() override
+    {
+        // NgheRo: refresh device list on scan
+        inputDevices.clear();
+        outputDevices.clear();
+        checkAvailableDevices();
+    }
 
     StringArray getDeviceNames (bool wantInputNames) const override
     {
